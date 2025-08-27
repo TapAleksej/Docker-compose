@@ -1,11 +1,11 @@
-FROM node:16.10.0-alpine
+FROM node:18-alpine
 # RUN apk add --no-cache tzdata
 # ENV TZ Europe/Moscow
 # ENV NODE_PATH /opt/server/node_modules
 
-WORKDIR /app
+WORKDIR /opt/server/
 
 COPY . .
-RUN npm install
+RUN npm i
 
 ENTRYPOINT ["sh", "-c", "npm run start"]
