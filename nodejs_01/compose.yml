@@ -1,1 +1,37 @@
 services:
+  # Контейнер с Node.js
+  app:
+    build:
+      context: ./nodejs-app_01    
+    working_dir: /opt/server
+    volumes:
+      - ./app:/opt/server
+      - ./static:/opt/static
+    ports:
+      - 3000:80
+    depends_on:
+      - memcached
+
+  # Контейнер с базой данных
+  memcached:
+    image: memcached
+    command:
+      - --conn-limit=1024
+      - --memory-limit=64
+      - --threads=4
+
+  # Контейнер с nginx
+  nginx:
+    container_name: proxy_nginx
+    depends_on:
+      - app
+      - memcached
+    image: nginx:latest
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - ./static:/var/www/static
+    restart: always
+
+ 
