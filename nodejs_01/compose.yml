@@ -4,7 +4,7 @@ services:
     build:
       context: ./nodejs-app_01    
     environment:
-      MEMCACHED_HOST: "${MEMCACHED_HOST}"    
+      MEMCACHED_HOST: "${MEMCACHED_HOST}"   
     depends_on:
       - memcached
     restart: always    
