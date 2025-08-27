@@ -22,7 +22,7 @@ services:
     ports:
       - 5000:5000
     env_file:
-      - ./golang-app_01/.env
+      - ./golang-app_01/.env_app
     restart: always
     depends_on:
       database:
