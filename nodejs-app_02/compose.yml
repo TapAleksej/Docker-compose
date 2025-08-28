@@ -1,17 +1,46 @@
 services:
   mariadb:
-    image: mariadb:latest # Or a specific version like mariadb:10.8
+    image: mariadb:10.8 # Or a specific version like mariadb:10.8
     container_name: mariadb-container
     environment:
-      MARIADB_ROOT_PASSWORD: your_root_password # Change this to a strong password
-      MARIADB_DATABASE: your_database_name
-      MARIADB_USER: your_user
-      MARIADB_PASSWORD: your_password
+      MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD}" 
+      MARIADB_DATABASE: "${MARIADB_DATABASE}"
+      MARIADB_USER: "${MARIADB_USER}"
+      MARIADB_PASSWORD: "${MARIADB_PASSWORD}" 
     volumes:
-      - mariadb_data:/var/lib/mysql # Persistent storage for data
+      - mariadb_data:/var/lib/mysql 
+    #ports:
+    #  - 3306:3306 
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "mariadb", "-u", "${MARIADB_USER}", "-p${MARIADB_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  
+
+  nginx:
+    container_name: proxy_nginx
+    depends_on:
+      - app    
+    image: nginx:latest
     ports:
-      - "3306:3306" # Map host port 3306 to container port 3306
-    restart: unless-stopped
+      - 8080:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    restart: always
+
+  app:
+    build:
+      context: .   
+      dockerfile: Dockerfile 
+    env_file:
+      - ./.env
+    depends_on: 
+      mariadb:
+        condition: service_healthy
+    restart: always 
+
 
 volumes:
-  mariadb_data:   
+  mariadb_data:  
