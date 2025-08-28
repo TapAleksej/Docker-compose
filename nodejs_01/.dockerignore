@@ -1,0 +1,5 @@
+nginx.conf
+Dockerfile
+.env
+README.md
+compose.yml

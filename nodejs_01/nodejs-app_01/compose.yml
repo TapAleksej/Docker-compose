@@ -2,7 +2,7 @@ services:
   # Контейнер с Node.js и app
   app:
     build:
-      context: ./nodejs-app_01    
+      context: .    
     environment:
       MEMCACHED_HOST: "${MEMCACHED_HOST}"   
     depends_on:
