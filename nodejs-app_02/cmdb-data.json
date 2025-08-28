@@ -1,0 +1,13 @@
+{
+    "type": "server",
+    "name": "Web Server 01",
+    "model": "HP ProLiant DL380",
+    "serialNumber": "HP987654",
+    "location": "Rack 15",
+    "owner": "Web Team",
+    "attributes": {
+      "cpu": "2x Intel Xeon Silver 4210",
+      "ram": "128GB",
+      "storage": "2x 1TB SSD"
+    }
+  }
