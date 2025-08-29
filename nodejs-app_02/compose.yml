@@ -7,6 +7,11 @@ services:
       MARIADB_DATABASE: mybd
       MARIADB_USER: olred
       MARIADB_PASSWORD: user_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "olred", "-puser_password"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
     volumes:
       - mariadb_data:/var/lib/mysql
@@ -32,8 +37,11 @@ services:
       env_file:
         - ./.env
       depends_on:
-        - mariadb
+        mariadb:
+          condition: service_healthy
       restart: always
+      ports:
+        - 3000:3000
 
 volumes:
   mariadb_data:

@@ -43,6 +43,7 @@ app.get('/api/servers', async (req, res) => {
     const [rows] = await pool.query('SELECT * FROM servers');
     res.json(rows);
   } catch (err) {
+
     res.status(500).json({ error: err.message });
   }
 });

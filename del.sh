@@ -6,7 +6,7 @@ docker images -qa | xargs docker rmi -f
 docker ps -a
 docker images
 
-olumes=$(docker volume ls -q)
+volumes=$(docker volume ls -q)
 
 if [ -z "$volumes" ]; then
   echo "No volumes found to remove"
