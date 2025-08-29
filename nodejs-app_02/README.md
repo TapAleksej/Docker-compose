@@ -1,11 +1,11 @@
 # CMDB API Server
-Простое REST API для сервиса инвентаризацци серверов 
-(CMDB - Configuration Management Database). 
+Простое REST API для сервиса инвентаризацци серверов
+(CMDB - Configuration Management Database).
 Позволяет добавлять и просматривать информацию о серверах в базе данных MySQL.
 
 ## Требования
 1) Node.js не ниже 14
-2) MySQL (mariadb) 
+2) MySQL (mariadb)
 3) Nginx в роли reverse proxy
 
 ## Запуск приложения
@@ -19,6 +19,7 @@ curl -X GET http://localhost:3000/assets?type=server
 # или
 curl -X GET http://localhost:3000/assets
 ```
+curl -X GET http://localhost:3000/api/servers
 Пример ответа (после первого запуска)
 ```
 []
