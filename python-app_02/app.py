@@ -5,11 +5,16 @@ from bson.objectid import ObjectId
 from bson.json_util import dumps
 from flask_cors import CORS
 
+
+
 app = Flask(__name__)
 CORS(app)
-mongo_uri = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/autoshop')
+mongo_uri = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/cars')
 app.config["MONGO_URI"] = mongo_uri
+
+
 mongo = PyMongo(app)
+
 db = mongo.db.cars
 
 @app.route('/api/cars', methods=['GET'])
