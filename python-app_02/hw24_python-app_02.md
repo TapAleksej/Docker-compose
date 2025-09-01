@@ -1,20 +1,20 @@
-# Задача
+### Задача
 
-# AutoShop Cars API
+#### AutoShop Cars API
 Простое RESTful API приложение для управления базой данных автомобилей.
 Позволяет выполнять основные CRUD операции (создание, чтение, обновление, удаление)
 записей об автомобилях в MongoDB.
 
-## Требования
+#### Требования
 1) python 3
 2) mongodb
 
-## Запуск приложения
+#### Запуск приложения
 ```bash
 python3 app.py
 ```
 
-## Проверка
+#### Проверка
 ```bash
 # Добавить автомобиль
 curl -X POST http://localhost:5000/api/cars \
@@ -43,29 +43,116 @@ curl -X GET http://localhost:5000/api/cars
 curl -X DELETE http://localhost:5000/api/cars/CAR_ID
 ```
 
-# Реализация
-
-Судя по зависимостям в app.py, в файле requirements.txt нехватает `bson` - добавлен.
-
-.env
+## Реализация
+Нужно прописать переменную для подключения app к mongo
+`MONGO_URI: 'mongodb://root:example@mongodb:27017/cars?authSource=admin'`
+, а так же переменные для инициализации mongo:
 ```
-MONGO_INITDB_ROOT_USERNAME=root
-MONGO_INITDB_ROOT_PASSWORD=example
+MONGO_INITDB_ROOT_USERNAME: root
+MONGO_INITDB_ROOT_PASSWORD: example
+MONGO_INITDB_DATABASE: cars
+```
+Для mongo прописан healthcheck c сервисом mongodb:
+```yml
+healthcheck:
+      test: "echo 'db.runCommand({ serverStatus: 1 }).ok' | mongosh --authenticationDatabase admin --host \
+            mongodb -u root -p example --quiet | grep -q 1"
+      interval: 10s
+      timeout: 10s
+      retries: 3
+```
+
+Остальное стандартно.
+
+
+#### nginx.conf
+```bash
+upstream backend {
+  server app:5000;
+}
+
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+}
 ```
 
 
-docker exec -it d74ade7d23eb mariadb -u root -p mybd
+#### Dockerfile
+```dockerfile
+FROM python:3
 
-docker exec -it 5e1e781f2c53  mongosh --host localhost --username root --password example
+WORKDIR /usr/src/app
 
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-show dbs
-use car
-show collections
-db.data.find()
+COPY . .
 
+CMD [ "python3", "./app.py" ]
+```
 
-root@ubuntu1:/home/alrex/PRO/compose/Docker-compose/python-app_02# curl -X POST http://localhost:5000/api/cars \
+#### compose.yml
+```yml
+services:
+  mongodb:
+    image: mongo:8
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: cars
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+      #- ./init-car.js:/docker-entrypoint-initdb.d/init-mongo.js
+    healthcheck:
+      test: "echo 'db.runCommand({ serverStatus: 1 }).ok' | mongosh --authenticationDatabase admin --host \
+            mongodb -u root -p example --quiet | grep -q 1"
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      MONGO_URI: 'mongodb://root:example@mongodb:27017/cars?authSource=admin'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: always
+    ports:
+      - 5000:5000
+
+  nginx:
+    container_name: proxy_nginx
+    depends_on:
+      - app
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    restart: always
+
+volumes:
+  mongo_data:
+```
+
+### Проверка
+
+#### Вставка строки
+```bash
+curl -X POST http://localhost:5000/api/cars \
   -H "Content-Type: application/json" \
   -d '{
     "brand": "Toyota",
@@ -73,18 +160,16 @@ root@ubuntu1:/home/alrex/PRO/compose/Docker-compose/python-app_02# curl -X POST 
     "year": 2022,
     "price": 25000
   }'
-{"id": "68b4956e30ccff926bc8c445"}root@ubuntu1:/home/alrex/PRO/compose/Docker-compose/python-app_02# curl -X GET http://localhost:5000/api/cars
-[{"_id": {"$oid": "68b4956e30ccff926bc8c445"}, "brand": "Toyota", "model": "Camry", "year": 2022, "price": 25000root@ubuntu1:/home/alrex/PRO/compose/Docker-compose/python-app_02# curl -X DELETE http://localhost:5000/api/cars/CAR_IDID
-<!doctype html>
-<html lang=en>
-<title>500 Internal Server Error</title>
-<h1>Internal Server Error</h1>
-<p>The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.</p>
-root@ubuntu1:/home/alrex/PRO/compose/Docker-compose/python-app_02# curl -X DELETE http://localhost:5000/api/cars/1
-<!doctype html>
-<html lang=en>
-<title>500 Internal Server Error</title>
-<h1>Internal Server Error</h1>
-<p>The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.</p>
-root@ubuntu1:/home/alrex/PRO/compose/Docker-compose/python-app_02# curl -X DELETE http://localhost:5000/api/cars/68b4956e30ccff926bc8c445
-{"message": "Car deleted"}root@ubuntu1:/home/alrex/PRO/compose/Docker-compose/python-app_02#
+{"id": "68b51bfbf499b63b2d87c4da"}
+```
+#### Список авто
+```bash
+curl -X GET http://localhost:5000/api/cars
+[{"_id": {"$oid": "68b51bfbf499b63b2d87c4da"}, "brand": "Toyota", "model": "Camry", "year": 2022, "price": 25000}]
+```
+
+#### Удалить авто
+```bash
+curl -X DELETE http://localhost:5000/api/cars/68b51bfbf499b63b2d87c4da
+{"message": "Car deleted"}
+```

@@ -1,3 +1,4 @@
 docker-apps/
 tmp
 python/hw1/.venv/
+python-app_02/.venv/
